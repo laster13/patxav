@@ -19,12 +19,16 @@
   gather_facts: false
   tasks:
 
+    - name: create watchtower state
+      shell: |
+        echo "1" > /opt/seedbox/status/watchtower
+
     - name: Deploy watchtower
       docker_container:
         name: 'watchtower'
         image: 'containrrr/watchtower'
         pull: yes
-        command: '--cleanup --interval 600'
+        command: '--cleanup --interval 600 --schedule "0 0 4 * * *"'
         state: started
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock
@@ -32,3 +36,8 @@
         restart_policy: unless-stopped
         networks:
           - name: traefik_proxy
+
+    - name: create watchtower state
+      shell: |
+        echo "2" > /opt/seedbox/status/watchtower
+
