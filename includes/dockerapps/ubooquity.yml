@@ -79,10 +79,10 @@
     - name: 'Set Known Facts'
       set_fact:
         pgrole: 'ubooquity'
-        image: 'zerpex/ubooquity-docker'
+        image: 'ghcr.io/linuxserver/ubooquity'
 
     - name: Creating paths
-      file: 'path={{item}} state=directory mode=0775 owner=1042 group=1042'
+      file: 'path={{item}} state=directory mode=0775 owner={{user.userid}} group={{user.groupid}}'
       with_items:
         - '/opt/seedbox/docker/{{user.name}}/{{pgrole}}'
 
@@ -91,20 +91,14 @@
       set_fact:
         pg_labels:
           traefik.enable: 'true'
-          ## HTTP Routers
-          traefik.http.routers.ubooquity-app-rtr.entrypoints: 'https'
+          traefik.http.routers.ubooquity-rtr.entrypoints: 'https'
           traefik.http.routers.ubooquity-rtr.rule: 'Host(`{{sub.ubooquity if sub_enabled else pgrole}}.{{user.domain}}`)'
-          traefik.http.routers.ubooquity-app-rtr.tls: 'true'
+          traefik.http.routers.ubooquity-rtr.service: 'ubooquity'
+          traefik.http.services.ubooquity.loadbalancer.server.port: '2202'
           traefik.http.routers.ubooquity-admin-rtr.entrypoints: 'https'
-          traefik.http.routers.ubooquity-admin-rtr.rule: 'Host(`{{sub.ubooquity if sub_enabled else pgrole}}.{{user.domain}}`) && (PathPrefix(`/admin`) || PathPrefix(`/admin-res`) || PathPrefix(`/admin-api`))'
-          traefik.http.routers.ubooquity-admin-rtr.tls: 'true'
-          ## Middlewares
-          traefik.http.routers.ubooquity-webui-rtr.middlewares: "{{ 'chain-authelia@file' if check.stat.exists | default(false) else 'chain-oauth@file' if oauth_enabled | default(false) else 'chain-basic-auth@file' }}"
-          ## HTTP Services
-          traefik.http.routers.ubooquity-app-rtr.service: 'ubooquity-app-svc'
-          traefik.http.services.ubooquity-app-svc.loadbalancer.server.port: '2202'
-          traefik.http.routers.ubooquity-admin-rtr.service: 'ubooquity-admin-svc'
-          traefik.http.services.ubooquity-admin-svc.loadbalancer.server.port: '2502'
+          traefik.http.routers.ubooquity-admin-rtr.rule: 'Host(`{{sub.ubooquity if sub_enabled else pgrole}}.{{user.domain}}`) && PathPrefix(`/ubooquity/admin`)'
+          traefik.http.routers.ubooquity-admin-rtr.service: 'ubooquity-admin'
+          traefik.http.services.ubooquity-admin.loadbalancer.server.port: '2203'
 
     - name: 'Setting Volumes'
       set_fact:
@@ -117,8 +111,8 @@
     - name: 'Setting ENV'
       set_fact:
         pg_env:
-          UID: '1042'
-          GID: '1042'
+          PUID: '{{user.userid}}'
+          PGID: '{{user.groupid}}'
           TZ: 'Europe/Paris'
 
     # MAIN DEPLOYMENT #############################################################
