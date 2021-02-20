@@ -1,0 +1,155 @@
+#!/bin/bash
+---
+- hosts: localhost
+  gather_facts: false
+  vars_files:
+    - /opt/seedbox/variables/account.yml
+  tasks:
+        
+    # FACTS #######################################################################
+
+    - name: create radarr state
+      shell: |
+        echo "1" > /opt/seedbox/status/deemixrr
+
+    - name: Checking for existing app data
+      stat:
+        path: '/opt/seedbox/docker/{{user.name}}/authelia/configuration.yml'
+      register: check
+
+    - name: "Variables | Set 'cloudflare_enabled' variable"
+      set_fact:
+        cloudflare_enabled: "{{ true if not(
+            (cloudflare.login is undefined)
+            or
+            (cloudflare.login is none)
+            or
+            (cloudflare.login | trim | length == 0)
+            or
+            (cloudflare.api is undefined)
+            or
+            (cloudflare.api is none)
+            or
+            (cloudflare.api | trim | length == 0)
+          )
+            else false }}"
+
+    - name: "Variables | Set 'oauth_enabled' variable"
+      set_fact:
+        oauth_enabled: "{{ true if not(
+            (oauth.client is undefined)
+            or
+            (oauth.client is none)
+            or
+            (oauth.client | trim | length == 0)
+            or
+            (oauth.secret is undefined)
+            or
+            (oauth.secret is none)
+            or
+            (oauth.secret | trim | length == 0)
+            or
+            (oauth.account is undefined)
+            or
+            (oauth.account is none)
+            or
+            (oauth.account | trim | length == 0)
+          )
+            else false }}"
+
+    - name: "Variables | Set 'sub' variable"
+      set_fact:
+        sub_enabled: "{{ true if not(
+            (sub.deemixrrdeemixrrdeemixrr is undefined)
+            or
+            (sub.deemixrrdeemixrr is none)
+            or
+            (sub.deemixrr | trim | length == 0)
+          )
+            else false }}"
+
+    - name: "Set DNS Record on CloudFlare"
+      include_tasks: '/opt/seedbox-compose/includes/config/roles/cloudflare/tasks/main.yml'
+      vars:
+        subdomain: "{{sub.deemixrr if sub_enabled else 'deemixrr'}}"
+      when: cloudflare_enabled
+
+    - name: 'Set Known Facts'
+      set_fact:
+        pgrole: 'deemixrr'
+        image: 'theultimatecoder/deemixrr:nightly'
+
+    - name: Creating paths
+      file: 'path={{item}} state=directory mode=0775 owner={{user.userid}} group={{user.groupid}}'
+      with_items:
+        - '/opt/seedbox/docker/{{user.name}}/{{pgrole}}'
+
+    # LABELS ######################################################################
+    - name: 'Ajout label traefik'
+      set_fact:
+        pg_labels:
+          traefik.enable: 'true'
+          ## HTTP Routers
+          traefik.http.routers.deemixrr-rtr.entrypoints: 'https'
+          traefik.http.routers.deemixrr-rtr.rule: 'Host(`{{sub.deemixrr if sub_enabled else pgrole}}.{{user.domain}}`)'
+          traefik.http.routers.deemixrr-rtr.tls: 'true'
+          ## Middlewares
+          traefik.http.routers.deemixrr-rtr.middlewares: "{{ 'chain-authelia@file' if check.stat.exists | default(false) else 'chain-oauth@file' if oauth_enabled | default(false) else 'chain-basic-auth@file' }}"
+          ## HTTP Services
+          #traefik.http.routers.deemixrr-rtr.tls.certresolver: 'dns-cloudflare' 
+          traefik.http.routers.deemixrr-rtr.service: 'deemixrr-svc'
+          traefik.http.services.deemixrr-svc.loadbalancer.server.port: '5555'
+
+    - name: 'Setting PG Volumes'
+      set_fact:
+        pg_volumes:
+          - '/opt/seedbox/docker/{{user.name}}/{{pgrole}}/config:/config'
+          - '/home/{{user.name}}:/home/{{user.name}}'
+          - '/etc/localtime:/etc/localtime:ro'
+
+    - name: 'Setting PG ENV'
+      set_fact:
+        pg_env:
+          PUID: '{{user.userid}}'
+          PGID: '{{user.groupid}}'
+          Kestrel__EndPoints__Http__Url: 'http://0.0.0.0:5555'
+          # Hangfire dashboard
+          Hangfire__DashboardPath: '/autoloaderjobs'
+          Hangfire__Workers: '2'
+          # Configure the cron expression for your job
+          JobConfiguration__GetUpdatesRecurringJob: '0 2 * * *'
+          JobConfiguration__SizeCalculatorRecurringJob: '0 12 * * *'
+          # Configure the wait time between API requests value is in ms
+          DelayConfiguration__ImportArtistsBackgroundJob_ExecuteDelay: '1000'
+          DelayConfiguration__CheckArtistForUpdatesBackgroundJob_GetTrackCountDelay: '1000'
+          DelayConfiguration__CheckArtistForUpdatesBackgroundJob_ExecuteDelay: '1000'
+          DelayConfiguration__CheckPlaylistForUpdatesBackgroundJob_ExecuteDelay: '1000'
+          DelayConfiguration__CreateArtistBackgroundJob_FromPlaylistDelay: '1000'
+          DelayConfiguration__CreateArtistBackgroundJob_FromUserDelay: '1000'
+          DelayConfiguration__CreateArtistBackgroundJob_FromCsvDelay: '1000'
+          DelayConfiguration__CreatePlaylistBackgroundJob_FromCsvDelay: '1000'
+          
+    # MAIN DEPLOYMENT #############################################################
+
+    - name: 'Deploying {{pgrole}}'
+      docker_container:
+        name: '{{pgrole}}'
+        image: '{{image}}'
+        pull: yes
+        volumes: '{{pg_volumes}}'
+        env: '{{pg_env}}'
+        restart_policy: unless-stopped
+        networks:
+          - name: traefik_proxy
+        state: started
+        labels: '{{pg_labels}}'
+
+    - name: add resume file
+      shell: |
+        echo "{{pgrole}}-{{sub.deemixrr if sub_enabled else pgrole}}.{{user.domain}}" >> /opt/temp.txt
+
+    - name: create deemixrr state
+      shell: |
+        echo "2" > /opt/seedbox/status/deemixrr
+
+
