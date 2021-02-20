@@ -8,7 +8,7 @@
         
     # FACTS #######################################################################
 
-    - name: create radarr state
+    - name: create deemixrr state
       shell: |
         echo "1" > /opt/seedbox/status/deemixrr
 
@@ -60,9 +60,9 @@
     - name: "Variables | Set 'sub' variable"
       set_fact:
         sub_enabled: "{{ true if not(
-            (sub.deemixrrdeemixrrdeemixrr is undefined)
+            (sub.deemixrr is undefined)
             or
-            (sub.deemixrrdeemixrr is none)
+            (sub.deemixrr is none)
             or
             (sub.deemixrr | trim | length == 0)
           )
