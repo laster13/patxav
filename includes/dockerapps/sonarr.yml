@@ -79,7 +79,7 @@
       set_fact:
         pgrole: 'sonarr'
         intport: '8989'
-        image: 'linuxserver/sonarr:preview'
+        image: 'linuxserver/sonarr:latest'
 
     - name: Creating paths
       file: 'path={{item}} state=directory mode=0775 owner={{user.userid}} group={{user.groupid}}'
