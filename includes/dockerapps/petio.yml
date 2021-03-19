@@ -78,7 +78,7 @@
     - name: 'Set Known Facts'
       set_fact:
         pgrole: 'petio'
-        image: 'hotio/petio:nightly'
+        image: 'hotio/petio'
 
     - name: Create petio-net network
       docker_network:
