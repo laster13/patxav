@@ -76,7 +76,7 @@
       set_fact:
         pgrole: 'qbittorrent'
         intport: '8080'
-        image: 'hotio/qbittorrent:testing'
+        image: 'linuxserver/qbittorrent:unstable'
 
     - name: Creating paths
       file: 'path={{item}} state=directory mode=0775 owner={{user.userid}} group={{user.groupid}}'
@@ -119,7 +119,7 @@
         image: '{{image}}'
         pull: yes
         ports:
-          - '8118:8118'
+          - '6881:6881'
         volumes: '{{pg_volumes}}'
         env: '{{pg_env}}'
         restart_policy: unless-stopped
