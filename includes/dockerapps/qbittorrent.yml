@@ -6,9 +6,9 @@
     - /opt/seedbox/variables/account.yml
   tasks:
 
-    - name: create qbitorrent state
+    - name: create qbittorrent state
       shell: |
-        echo "1" > /opt/seedbox/status/qbitorrent
+        echo "1" > /opt/seedbox/status/qbittorrent
 
     - name: Checking for existing app data
       stat:
@@ -58,25 +58,25 @@
     - name: "Variables | Set 'sub' variable"
       set_fact:
         sub_enabled: "{{ true if not(
-            (sub.qbitorrent is undefined)
+            (sub.qbittorrent is undefined)
             or
-            (sub.qbitorrent is none)
+            (sub.qbittorrent is none)
             or
-            (sub.qbitorrent | trim | length == 0)
+            (sub.qbittorrent | trim | length == 0)
           )
             else false }}"
 
     - name: "Set DNS Record on CloudFlare"
       include_tasks: '/opt/seedbox-compose/includes/config/roles/cloudflare/tasks/main.yml'
       vars:
-        subdomain: "{{sub.qbitorrent if sub_enabled else 'qbitorrent'}}"
+        subdomain: "{{sub.qbittorrent if sub_enabled else 'qbittorrent'}}"
       when: cloudflare_enabled
 
     - name: 'Set Known Facts'
       set_fact:
-        pgrole: 'qbitorrent'
+        pgrole: 'qbittorrent'
         intport: '8080'
-        image: 'ghcr.io/linuxserver/qbittorrent'
+        image: 'hotio/qbittorrent:testing'
 
     - name: Creating paths
       file: 'path={{item}} state=directory mode=0775 owner={{user.userid}} group={{user.groupid}}'
@@ -89,14 +89,14 @@
         pg_labels:
           traefik.enable: 'true'
           ## HTTP Routers
-          traefik.http.routers.qbitorrent-rtr.entrypoints: 'https'
-          traefik.http.routers.qbitorrent-rtr.rule: 'Host(`{{sub.qbitorrent if sub_enabled else pgrole}}.{{user.domain}}`)'
-          traefik.http.routers.qbitorrent-rtr.tls: 'true'
+          traefik.http.routers.qbittorrent-rtr.entrypoints: 'https'
+          traefik.http.routers.qbittorrent-rtr.rule: 'Host(`{{sub.qbittorrent if sub_enabled else pgrole}}.{{user.domain}}`)'
+          traefik.http.routers.qbittorrent-rtr.tls: 'true'
           ## Middlewares
-          traefik.http.routers.qbitorrent-rtr.middlewares: "{{ 'chain-authelia@file' if check.stat.exists | default(false) else 'chain-oauth@file' if oauth_enabled | default(false) else 'chain-basic-auth@file' }}"
+          traefik.http.routers.qbittorrent-rtr.middlewares: "{{ 'chain-authelia@file' if check.stat.exists | default(false) else 'chain-oauth@file' if oauth_enabled | default(false) else 'chain-basic-auth@file' }}"
           ## HTTP Services
-          traefik.http.routers.qbitorrent-rtr.service: 'qbitorrent-svc'
-          traefik.http.services.qbitorrent-svc.loadbalancer.server.port: '8080'
+          traefik.http.routers.qbittorrent-rtr.service: 'qbittorrent-svc'
+          traefik.http.services.qbittorrent-svc.loadbalancer.server.port: '8080'
 
     - name: 'Setting PG Volumes'
       set_fact:
@@ -119,7 +119,7 @@
         image: '{{image}}'
         pull: yes
         ports:
-          - '6881:6881'
+          - '8118:8118'
         volumes: '{{pg_volumes}}'
         env: '{{pg_env}}'
         restart_policy: unless-stopped
@@ -130,8 +130,8 @@
 
     - name: add resume file
       shell: |
-        echo "{{pgrole}}-{{sub.qbitorrent if sub_enabled else pgrole}}.{{user.domain}}" >> /opt/temp.txt
+        echo "{{pgrole}}-{{sub.qbittorrent if sub_enabled else pgrole}}.{{user.domain}}" >> /opt/temp.txt
 
-    - name: create qbitorrent state
+    - name: create qbittorrent state
       shell: |
-        echo "2" > /opt/seedbox/status/qbitorrent
+        echo "2" > /opt/seedbox/status/qbittorrent
