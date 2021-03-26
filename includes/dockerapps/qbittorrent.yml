@@ -76,7 +76,7 @@
       set_fact:
         pgrole: 'qbittorrent'
         intport: '8080'
-        image: 'linuxserver/qbittorrent:unstable'
+        image: 'linuxserver/qbittorrent:latest'
 
     - name: Creating paths
       file: 'path={{item}} state=directory mode=0775 owner={{user.userid}} group={{user.groupid}}'
