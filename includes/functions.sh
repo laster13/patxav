@@ -1197,6 +1197,10 @@ function script_plexdrive() {
 		       ;;
                        esac
                 ;;
+		
+		3)
+		exit
+		;;
 
 		10) ## Désinstalation seedbox
 		clear
@@ -1293,13 +1297,7 @@ function script_plexdrive() {
                 ansible-vault encrypt /opt/seedbox/variables/account.yml > /dev/null 2>&1
                 echo -e "\nAppuyer sur ${CCYAN}[ENTREE]${CEND} pour sortir du script..."
                 read -r
-
                 ;;
-
-
-		4)
-		exit
-		;;
 	        esac
 	fi
 }
