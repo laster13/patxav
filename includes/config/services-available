@@ -9,7 +9,7 @@ Jellyfin-EmbyMediaServer
 Lidarr-MusicCollectionManager
 Medusa-TVShowsAutomation
 Netdata-RealtimePerformanceHealthMonitoring
-Nextcloud-SafeHomeForAllYourDataandofficeandcollabora
+Nextcloud-SafeHomeForAllYourData
 NZBHydra-NzbIndexer
 Ombi-PlexRequestAndUserManagementSystem
 Organizr-OrganiseLinksWebApplications
@@ -20,7 +20,7 @@ Portainer-LightweightManagementUI
 Qbittorrent-TorrentClient
 QbittorrentVPN-TorrentClientVPN
 Radarr-MoviesAutomation-ForkSonarr
-Readarr-BookMagazineComicsEbookAudiobookManager
+Readarr-BookComicsEbookAudiobookManager
 Rtorrentvpn-TorrentClient
 Rutorrent-TorrentClient
 Sabnzbd-SabnzbdUsenet
@@ -29,4 +29,4 @@ Sonarr-TVShowsAutomation
 Tautulli-FeatureRichDashboardOfStatistics
 Transmissionvpn-TorrentClientVPN
 Transmission-TorrentClientVPN
-Sickchill-AutomaticVideoLibraryManagerTVShows
+Sickchill-AutomaticVideoManagerTVShows
