@@ -1,13 +1,10 @@
 #!/bin/bash
-
 ---
 - hosts: localhost
   gather_facts: false
   vars_files:
     - /opt/seedbox/variables/account.yml
   tasks:
-        
-    # FACTS #######################################################################
 
     - name: create prowlarr state
       shell: |
@@ -17,7 +14,7 @@
       stat:
         path: '/opt/seedbox/docker/{{user.name}}/authelia/configuration.yml'
       register: check
-
+  
     - name: "Variables | Set 'cloudflare_enabled' variable"
       set_fact:
         cloudflare_enabled: "{{ true if not(
@@ -86,27 +83,6 @@
       with_items:
         - '/opt/seedbox/docker/{{user.name}}/{{pgrole}}'
 
-    # MIGRATIONS (MANDATORY) ############################################################
-    - name: Checking for old app data
-      stat:
-        path: '/opt/seedbox/docker/{{user.name}}/{{pgrole}}/prowlarr/ServerConfig.json'
-      register: olddatacheck
-
-    - name: Migrating appdata
-      shell: 'mv /opt/seedbox/docker/{{user.name}}/{{pgrole}}/prowlarr/* /opt/seedbox/docker/{{user.name}}/{{pgrole}}'
-      ignore_errors: yes
-      when: olddatacheck.stat.exists
-
-    - name: Migrating appdata
-      shell: 'rmdir /opt/seedbox/docker/{{user.name}}/{{pgrole}}/prowlarr'
-      ignore_errors: yes
-      when: olddatacheck.stat.exists
-
-    - name: Checking for existing app data
-      stat:
-        path: '/opt/seedbox/docker/{{user.name}}/{{pgrole}}/ServerConfig.json'
-      register: datacheck
-
     # LABELS ######################################################################
     - name: 'Ajout label traefik'
       set_fact:
@@ -120,21 +96,23 @@
           traefik.http.routers.prowlarr-rtr.middlewares: "{{ 'chain-authelia@file' if check.stat.exists | default(false) else 'chain-oauth@file' if oauth_enabled | default(false) else 'chain-basic-auth@file' }}"
           ## HTTP Services
           traefik.http.routers.prowlarr-rtr.service: 'prowlarr-svc'
-          traefik.http.services.prowlarr-svc.loadbalancer.server.port: '9117'
+          traefik.http.services.prowlarr-svc.loadbalancer.server.port: '9696'
 
     - name: 'Setting PG Volumes'
       set_fact:
         pg_volumes:
-          - '/opt/seedbox/docker/{{user.name}}/{{pgrole}}:/config/prowlarr'
-          - '/etc/localtime:/etc/localtime:ro'
+          - '/opt/seedbox/docker/{{user.name}}/{{pgrole}}/config:/config'
+          - '/:/data'
 
     - name: 'Setting PG ENV'
       set_fact:
         pg_env:
           PUID: '{{user.userid}}'
           PGID: '{{user.groupid}}'
+          TZ: 'Europe/Paris'
 
     # MAIN DEPLOYMENT #############################################################
+
     - name: 'Deploying {{pgrole}}'
       docker_container:
         name: '{{pgrole}}'
@@ -148,24 +126,6 @@
         state: started
         labels: '{{pg_labels}}'
 
-    # CONFIGURATION ####################################################
-
-    - name: 'Waiting for {{pgrole}} to initialize'
-      wait_for:
-        path: '/opt/seedbox/docker/{{user.name}}/{{pgrole}}/ServerConfig.json'
-        state: present
-        msg: ServerConfig.json creation failed
-
-    - name: 'Stopping {{pgrole}}'
-      docker_container:
-        name: '{{pgrole}}'
-        state: stopped
-
-    - name: Restart {{pgrole}}
-      docker_container:
-        name: '{{pgrole}}'
-        state: started
-
     - name: add resume file
       shell: |
         echo "{{pgrole}}-{{sub.prowlarr if sub_enabled else pgrole}}.{{user.domain}}" >> /opt/temp.txt
@@ -173,5 +133,3 @@
     - name: create prowlarr state
       shell: |
         echo "2" > /opt/seedbox/status/prowlarr
-
-
