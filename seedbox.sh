@@ -17,6 +17,17 @@ source "${SCRIPTPATH}/includes/functions.sh"
 # shellcheck source=/opt/seedbox-compose/includes/variables.sh
 source "${SCRIPTPATH}/includes/variables.sh"
 clear
+echo "################################################"
+echo "# ATTENTION "
+echo "# ce script n'est plus maintenu "
+echo "# Merci soit d'installer la v2 "
+echo "# soit de faire la migration "
+echo " ================================================"
+echo " https://github.com/projetssd/ssdv2 "
+echo "################################################"
+pause
+clear
+
 if [[ ! -d "$CONFDIR" ]]; then
   echo -e "${CCYAN}
    ___  ____  ____  ____  ____  _____  _  _
