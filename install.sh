@@ -426,20 +426,24 @@ EOL
 echo "Installation de concurrently et des dépendances du frontend..."
 pnpm install
 
+# supprimer pypotry si necessaire
+sudo rm -rf $HOME/.cache/pypoetry 2>/dev/null
+
 # Installer Poetry dans le dossier riven et configurer Python 3.11
 echo "Installation de Poetry et des dépendances backend..."
 cd "$RIVEN_DIR"
-pip3.11 install cffi
+
+python3.11 -m venv venv
+source venv/bin/activate
 pip3.11 install poetry  # Utiliser pip3.11 pour installer Poetry
-poetry env use python3.11  # Utiliser Python 3.11 avec Poetry
 
 # Installer manuellement le package srt sans PEP 517 (si nécessaire)
 echo "Installation du package srt sans PEP 517..."
-pip3.11 install --no-use-pep517 srt==3.5.3
+pip install --no-cache-dir --use-pep517 srt==3.5.3
 
 # Installer les autres dépendances via Poetry
 echo "Installation des autres dépendances backend..."
-poetry install --without dev  # Installer les dépendances Python sans les dev dependencies
+poetry install --without dev
 
 # Installer les dépendances frontend
 cd "$RIVEN_FRONTEND_DIR"
