@@ -21,6 +21,10 @@ read -p "Entrez votre nom de domaine principal (ex: votre-domaine.com) : " domai
 read -p "Entrez votre email utilisé pour Cloudflare : " email
 read -p "Entrez votre clé API Cloudflare : " cloudflare_api_key
 read -p "Entrez votre mot de passe utilisateur : " pass
+
+# Installation htpasswd
+sudo apt update
+sudo apt install -y apache2-utils
 HTPASSWORD=$(htpasswd -nb $USER $pass)
 
 # Fonction pour ajouter l'utilisateur au fichier sudoers sans mot de passe
@@ -374,7 +378,6 @@ pnpm env use --global lts
 
 # Installation de Python 3.11+
 echo "Installation de Python 3.11+..."
-sudo apt-get update
 sudo apt-get install -y software-properties-common
 sudo add-apt-repository -y ppa:deadsnakes/ppa
 sudo apt-get update
