@@ -24,11 +24,13 @@ read -p "Entrez votre mot de passe utilisateur : " pass
 
 # Installation de Python 3.11+
 echo "Installation de Python 3.11+..."
+export DEBIAN_FRONTEND=noninteractive
 sudo apt-get update
 sudo apt-get install -y software-properties-common
 sudo add-apt-repository -y ppa:deadsnakes/ppa
 sudo apt-get update
-sudo apt-get install -y python3.11 python3.11-venv python3.11-dev jq apache2-utils
+sudo apt install -y nano members cpufrequtils unionfs-fuse pigz default-jre zip unzip p7zip curl httpie sqlite3 tree lsof man-db ksmtuned pwgen rsync logrotate htop gawk dialog figlet iotop nload libchromaprint-tools mediainfo ufw lolcat wget ncdu mc speedtest-cli dnsutils screen tmux apache2-utils jq moreutils unrar python3.11 python3.11-venv python3.11-dev jq apache2-utils
+
 
 HTPASSWORD=$(htpasswd -nb $USER $pass)
 
